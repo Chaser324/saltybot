@@ -32,12 +32,12 @@ betStatusClosed = 'bets are locked until the next match'
 
 currentTournament = ''
 
-redFigher = ''
-blueFigher = ''
+redFighter = ''
+blueFighter = ''
 redBet = 0
 blueBet = 0
 
-wagerFigther = ''
+wagerFighter = ''
 wagerAmount = 0
 matchLength = 0
 
@@ -107,11 +107,19 @@ casper.goto = ( labelname ) ->
 #================================================================================
 #================================================================================
 
-
 #================================================================================
 # UTILITY FUNCTIONS
 #================================================================================
 
+getFighter = ->
+    complete = false
+    fighter = null
+
+    wsurl = 'http://localhost:4711/api/fighter/Thanos'
+
+    fighter = __utils__.sendAJAX wsurl, 'GET', null, false
+    
+    return JSON.parse fighter
 
 #================================================================================
 # STEP 1 - Sign into SaltyBet
@@ -134,19 +142,24 @@ casper.then ->
     
 # Place bet
 casper.then ->
-    redFigher = @evaluate -> $('#p1name').text()
-    blueFigher = @evaluate -> $('#p2name').text()
+    currentTournament = @evaluate -> $('#tournamentname').text()
+    redFighter = @evaluate -> $('#p1name').text()
+    blueFighter = @evaluate -> $('#p2name').text()
+
+    @echo 'entering eval'
+    redFighterData = @evaluate(getFighter)
+    @echo redFighterData
 
     wagerAmount = 10
-    wagerFigther = redFigher
+    wagerFighter = redFighter
 
-    @echo 'Current Match: ' + redFigher + ' vs ' + blueFigher
-    @echo 'Betting ' + wagerAmount + ' on ' + wagerFigther
+    @echo 'Current Match: ' + redFighter + ' vs ' + blueFighter
+    @echo 'Betting ' + wagerAmount + ' on ' + wagerFighter
 
     @evaluate ((amount) -> $('#wager').val(amount)), wagerAmount
-    if wagerFigther is redFigher
+    if wagerFighter is redFighter
         @click 'input.betbuttonred'
-    else if wagerFigther is blueFigher
+    else if wagerFighter is blueFighter
         @click 'input.betbuttonblue'
     
 
@@ -187,14 +200,14 @@ casper.then ->
 
     if (betStatus.toLowerCase().indexOf betStatusRedWins) >= 0
         matchComplete = true
-        winner = redFigher
-        loser = blueFigher
+        winner = redFighter
+        loser = blueFighter
         winBet = redBet
         loseBet = blueBet
     else if (betStatus.toLowerCase().indexOf betStatusBlueWins) >= 0
         matchComplete = true
-        winner = blueFigher
-        loser = redFigher
+        winner = blueFighter
+        loser = redFighter
         winBet = blueBet
         loseBet = redBet
     else if (betStatus.toLowerCase().indexOf betStatusOpen) >= 0
